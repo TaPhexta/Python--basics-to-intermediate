@@ -2,8 +2,8 @@ from tasks import add_task, load_tasks
 
 def display_menu():
     print("\n--- Task Manager ---")
-    print("1. Add Task")
-    print("2. Load Tasks")
+    print("1. Load Tasks")
+    print("2. Add Task")
     print("3. Exit")
     
 def main():
