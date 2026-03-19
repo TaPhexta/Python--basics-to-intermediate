@@ -17,7 +17,7 @@ def main():
                 print("No tasks found. Please add a task first.")
             for i, task in enumerate(tasks, 1):
                 status = "✅" if task['completed'] else "❌"
-                print(f"{i}. {task['title']} [{status}]")
+                print(f"{i}. {task['description']} [{status}]")
                 
         elif choice == '2':
             desc = input("Enter task description: ")

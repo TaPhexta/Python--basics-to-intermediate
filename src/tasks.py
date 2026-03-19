@@ -12,7 +12,7 @@ def load_tasks() -> list:
     try:
         with open(DATA_FILE, 'r') as file:
             return json.load(file)
-    except (son.JSONDecodeError, FileNotFoundError):
+    except (json.JSONDecodeError, FileNotFoundError):
         return []
     
 def save_tasks(tasks: list) -> None:
