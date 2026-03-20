@@ -4,49 +4,102 @@ import os
 # Defining database file name
 DATA_FILE = 'tasks.json'
 
-def load_tasks() -> list:
-    """Load tasks from the JSON file."""
+def load_data() -> list:
+    """Load data from the database."""
     if not os.path.exists(DATA_FILE):
-        return []
+        return {}
     
     try:
         with open(DATA_FILE, 'r') as file:
             return json.load(file)
     except (json.JSONDecodeError, FileNotFoundError):
-        return []
+        return {}
     
-def save_tasks(tasks: list) -> None:
-    """Save tasks to the JSON file."""
+def save_data(data: dict) -> None:
+    """Save data to the JSON file."""
     with open(DATA_FILE, 'w') as file:
-        json.dump(tasks, file, indent=4)
+        json.dump(data, file, indent=4)
         
-def add_task(description: str) -> None:
-    """Add a new task to the list."""
-    tasks = load_tasks()
-    new_task = {
-        'description': description,
-        'completed': False
-    }
-    tasks.append(new_task)
-    save_tasks(tasks)
+def generate_username(first_name: str, last_name: str) -> list:
+    """Generate a username based on the first and last name."""
+    f = first_name.lower().strip()
+    l = last_name.lower().strip()
     
-def edit_task(index: int, new_description: str) -> None:
-    """Edit an existing task."""
-    tasks = load_tasks()
-    try:
-        tasks[index - 1]['description'] = new_description
-        save_tasks(tasks)
-        return True
-    except (IndexError, ValueError):
+    opt1 = f"{l}{f}"              #SurnameName
+    opt2 = f"{f}{l[:4]}"          #NameSurn (first 4 letters of surname)
+    return [opt1, opt2]
+
+def is_valid_pin(pin: str) -> bool:
+    """Check for 6 digits with no more than 3 repeating numbers"""
+    if not pin.isdigit() or len(pin) != 6:
         return False
     
-def toggle_task(index: int) -> bool:
-    """Toggles the completion status of a task by its list index."""
-    tasks = load_tasks()
-    try:
-        # Check if the index is valid before trying to flip the boolean
-        tasks[index - 1]["completed"] = not tasks[index - 1]["completed"]
-        save_tasks(tasks)
+    # check if any single digit appears more than 3 times
+    for digit in set(pin):
+        if pin.count(digit) > 3:
+            return False
+    return True
+    
+def create_profile(username: str, pin: str) -> None:
+    """Create a new user profile."""
+    data = load_data()
+    data[username] = {
+        'pin': pin,
+        'tasks': []
+    }
+    save_data(data)
+    
+def authenticate(username: str, pin: str) -> bool:
+    """Authenticate user credentials."""
+    data = load_data()
+    user_data = data.get(username)
+    if user_data and user_data['pin'] == pin:
         return True
-    except (IndexError, ValueError):
+    return False
+
+def get_user_tasks(username: str) -> list:
+    """Return the task list for specific auth'd user"""
+    data = load_data()
+    return data.get(username, []).get('tasks', [])
+    
+def add_task(username: str, description: str) -> None:
+    """Adds a task to a specific user's list."""
+    data = load_data()
+    if username in data:
+        new_task = {"description": description, "completed": False}
+        data[username]["tasks"].append(new_task)
+        save_data(data)
+
+def edit_task(username: str, index: int, new_desc: str) -> bool:
+    """Edits a specific user's task by index (1-based)."""
+    data = load_data()
+    try:
+        # use index -1 since users see 123
+        data[username]["tasks"][index - 1]["description"] = new_desc
+        save_data(data)
+        return True
+    except (KeyError, IndexError):
+        return False
+    
+def toggle_task(username: str, index: int) -> bool:
+    """Flips the completed status for a specific user's task."""
+    data = load_data()
+    try:
+        # use index -1 since users see 123
+        current_status = data[username]["tasks"][index - 1]["completed"]
+        data[username]["tasks"][index - 1]["completed"] = not current_status
+        save_data(data)
+        return True
+    except (KeyError, IndexError):
+        return False
+    
+def delete_task(username: str, index: int) -> bool:
+    """Deletes a specific user's task by index (1-based)."""
+    data = load_data()
+    try:
+        # use index -1 since users see 123
+        data[username]["tasl"].pop(index - 1)
+        save_data(data)
+        return True
+    except (KeyError, IndexError):
         return False
