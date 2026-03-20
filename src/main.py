@@ -1,18 +1,20 @@
-from tasks import (
-    delete_task, generate_username, create_profile, authenticate, get_user_tasks, add_task, toggle_task, edit_task, is_valid_pin
-)
+import maskpass
+import tasks
 
 def show_tasks(username):
     """Display the user's tasks."""
-    tasks = get_user_tasks(username)
+    # Renamed local variable to 'user_tasks' to avoid clashing with the 'tasks' module
+    user_tasks = tasks.get_user_tasks(username)
     print(f"\n--- {username}'s Tasks ---")
-    if not tasks:
+    if not user_tasks:
         print("No tasks found.")
         return False
     
-    for i, task in enumerate(tasks, 1):
+    for i, task in enumerate(user_tasks, 1):
         status = "✅" if task['completed'] else "❌"
-        print(f"{i}. {task['description']} [{status}]")
+        # Displaying description and the due time
+        due = task.get('due_time', 'N/A')
+        print(f"{i}. {task['description']} (Due: {due}) [{status}]")
     return True
 
 
@@ -27,9 +29,10 @@ def main():
         
         if choice == '1':
             user = input("Enter username: ").lower().strip()
-            pin = input("Enter PIN: ").strip()
+            # maskpass for secure login
+            pin = maskpass.askpass(prompt="PIN: ", mask="*")
             
-            if authenticate(user, pin):
+            if tasks.authenticate(user, pin):
                 print(f"\nWelcome back, {user}!")
                 
                 # --- Auth'd user session ---
@@ -45,13 +48,19 @@ def main():
                     
                     if sub_choice == '1':
                        if show_tasks(user):
-                            idx =input("\nEnter number to toggle (or Enter to go back):")
+                            idx = input("\nEnter number to toggle (or Enter to go back):")
                             if idx.isdigit():
-                                toggle_task(user, int(idx))
+                                tasks.toggle_task(user, int(idx))
                     
                     elif sub_choice == '2':
-                        desc = input("Enter task description: ")
-                        add_task(user, desc)
+                        desc = input("Enter task description (max 50 chars): ")
+                        # description length <50 characters
+                        if len(desc) > 50:
+                            print("Text too long, Please limit to 50 characters.")
+                            continue # Keep user in the dashboard session
+                        
+                        time = input("Enter due time (e.g. '08:00'): ")
+                        tasks.add_task(user, desc, time)
                         print("Task added.")
                         
                     elif sub_choice == '3':
@@ -60,16 +69,17 @@ def main():
                                 idx = input("\nEnter number to edit (or Enter to go back): ")
                                 if idx.isdigit():
                                     new_desc = input("Enter new description: ")
-                                    if edit_task(user, int(idx), new_desc):
+                                    if tasks.edit_task(user, int(idx), new_desc):
                                         print("Task updated.")
                             except ValueError:
                                     print("Invalid input.")
+
                     elif sub_choice == '4':
                         if show_tasks(user):
                             try:
                                 idx = input("\nEnter number to delete (or Enter to go back): ")
                                 if idx.isdigit():
-                                    if delete_task(user, int(idx)):
+                                    if tasks.delete_task(user, int(idx)):
                                         print("Task deleted.")
                             except ValueError:
                                     print("Invalid input.")
@@ -83,7 +93,7 @@ def main():
             # --- Registration Flow ---
             first_name = input("Enter first name: ")
             last_name = input("Enter last name: ")
-            option = generate_username(first_name, last_name)
+            option = tasks.generate_username(first_name, last_name)
             
             print("\nChoose a Username:")
             print(f"1. {option[0]}")
@@ -94,9 +104,10 @@ def main():
             
             # PIN creation with validation
             while True:
-                new_pin = input("Create a 6-digit PIN (max 3 repeating digits): ")
-                if is_valid_pin(new_pin):
-                    create_profile(chosen_user, new_pin)
+                # maskpass for secure registration
+                new_pin = maskpass.askpass(prompt="Create a 6-digit PIN (max 3 repeating digits): ", mask="*")
+                if tasks.is_valid_pin(new_pin):
+                    tasks.create_profile(chosen_user, new_pin)
                     print(f"Profile created for {chosen_user}. You can now log in.")
                     print(f"Your username is: {chosen_user}")
                     break

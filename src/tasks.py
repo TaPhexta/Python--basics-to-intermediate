@@ -61,13 +61,18 @@ def get_user_tasks(username: str) -> list:
     """Return the task list for specific auth'd user"""
     data = load_data()
     return data.get(username, []).get('tasks', [])
+
+# CRUD operations for tasks
     
-def add_task(username: str, description: str) -> None:
-    """Adds a task to a specific user's list."""
+def add_task(username: str, description: str, time: str) -> None:
     data = load_data()
     if username in data:
-        new_task = {"description": description, "completed": False}
-        data[username]["tasks"].append(new_task)
+        # Now saving description AND due_time
+        data[username]["tasks"].append({
+            "description": description, 
+            "completed": False,
+            "time": time        # now including time at which task is set for
+        })
         save_data(data)
 
 def edit_task(username: str, index: int, new_desc: str) -> bool:
@@ -81,6 +86,17 @@ def edit_task(username: str, index: int, new_desc: str) -> bool:
     except (KeyError, IndexError):
         return False
     
+def delete_task(username: str, index: int) -> bool:
+    """Deletes a specific user's task by index (1-based)."""
+    data = load_data()
+    try:
+        # use index -1 since users see 123
+        data[username]["tasks"].pop(index - 1)
+        save_data(data)
+        return True
+    except (KeyError, IndexError):
+        return False
+    
 def toggle_task(username: str, index: int) -> bool:
     """Flips the completed status for a specific user's task."""
     data = load_data()
@@ -88,17 +104,6 @@ def toggle_task(username: str, index: int) -> bool:
         # use index -1 since users see 123
         current_status = data[username]["tasks"][index - 1]["completed"]
         data[username]["tasks"][index - 1]["completed"] = not current_status
-        save_data(data)
-        return True
-    except (KeyError, IndexError):
-        return False
-    
-def delete_task(username: str, index: int) -> bool:
-    """Deletes a specific user's task by index (1-based)."""
-    data = load_data()
-    try:
-        # use index -1 since users see 123
-        data[username]["tasl"].pop(index - 1)
         save_data(data)
         return True
     except (KeyError, IndexError):
