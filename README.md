@@ -25,6 +25,7 @@ Building this pushed me to think about how data flows between a user interface (
 
 ## 🔜 Future Roadmap
 Now that the foundation is solid, I'm looking to add:
+- **User Friendly Interface:** Giving life to the skeleton of this application."
 - **Search Functionality:** Finding tasks by keyword for better navigation.
 - **Task Categories:** Sorting items into "Work," "Personal," or "Urgent."
 - **Export to CSV:** Allowing users to download their task list for external use.
